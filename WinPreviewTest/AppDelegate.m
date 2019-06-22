@@ -53,7 +53,12 @@
         
         CGWindowID windowID = [windowDict[(NSString *)kCGWindowNumber] unsignedIntValue];
         CGImageRef windowImage = CGWindowListCreateImage(bounds, kCGWindowListOptionIncludingWindow, windowID, kCGWindowImageDefault);
-        
+
+        if ((CGImageGetHeight(windowImage) <= 40) || (CGImageGetWidth(windowImage) <= 40)) {
+            CGImageRelease(windowImage);
+            continue;
+        }
+
         NSImage *image;
         
         if (windowImage != NULL) {
@@ -64,10 +69,10 @@
         
         CGImageRelease(windowImage);
         
-        if ((image.size.width <= 40) || (image.size.height <= 40)) {
+        if (!image) {
             continue;
         }
-        
+
         windowDict[@"kCGWindowImage"] = image;
         
         [filteredArray addObject:windowDict];
