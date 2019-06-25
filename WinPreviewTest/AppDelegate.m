@@ -1,7 +1,6 @@
 
 #import "AppDelegate.h"
 #import "PreviewCollectionItem.h"
-#import <Accelerate/Accelerate.h>
 
 @interface AppDelegate ()
 
