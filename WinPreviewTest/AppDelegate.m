@@ -67,7 +67,6 @@
             CGImageRef windowImage = CGWindowListCreateImage(bounds, kCGWindowListOptionIncludingWindow, windowID, kCGWindowImageDefault);
             
             CGImageRef resizedCGImage = [self resizeImage_uikit:windowImage size:thumbnailSize];
-//            CGImageRef resizedCGImage = [self resizeImage_vImage:windowImage size:CGSizeMake(294, 250)];
 
             NSImage *image;
             
@@ -112,61 +111,6 @@
     });
 }
 
-- (CGImageRef) resizeImage_vImage:(CGImageRef)windowImage size:(CGSize)size {
-    // accelerated framework image resize blackmagic
-    CGSize origSize = CGSizeMake(CGImageGetWidth(windowImage), CGImageGetHeight(windowImage));
-    
-    CGFloat scale = size.height / origSize.height;
-    if (origSize.width * scale > size.width) {
-        scale = size.width / origSize.height;
-    }
-    CGSize resSize = CGSizeMake(origSize.width * scale, origSize.height * scale);
-    
-    CGColorSpaceRef originalColorSpace = CGColorSpaceRetain(CGImageGetColorSpace(windowImage));
-
-    vImage_CGImageFormat vImFormat = {
-        .bitsPerComponent = 8,
-        .bitsPerPixel = 32,
-        .colorSpace = originalColorSpace,
-        .bitmapInfo = CGImageGetBitmapInfo(windowImage),
-        .version = 0,
-        .decode = NULL,
-        .renderingIntent = kCGRenderingIntentDefault};
-    
-    vImage_Buffer vImSrcBuffer;
-    
-    vImage_Error vImError = vImageBuffer_InitWithCGImage(&vImSrcBuffer, &vImFormat, NULL, windowImage, kvImageNoFlags);
-    if (vImError != kvImageNoError) {
-        NSLog(@"vImageBuffer_InitWithCGImage vImage_Error %@", @(vImError));
-        return nil;
-    }
-    
-    vImage_Buffer vImDstBuffer;
-    
-    vImError = vImageBuffer_Init(&vImDstBuffer, resSize.height, resSize.width, vImFormat.bitsPerPixel, kvImageNoFlags);
-    if (vImError != kvImageNoError) {
-        NSLog(@"vImageBuffer_Init vImage_Error %@", @(vImError));
-        return nil;
-    }
-    
-    vImError = vImageScale_ARGB8888(&vImSrcBuffer, &vImDstBuffer, nil, kvImageDoNotTile);
-    if (vImError != kvImageNoError) {
-        NSLog(@"vImageScale_ARGB8888 vImage_Error %@", @(vImError));
-        return nil;
-    }
-
-    CGImageRef resizedCGImage = vImageCreateCGImageFromBuffer(&vImDstBuffer, &vImFormat, nil, nil, kvImageNoAllocate, &vImError);
-    if (vImError != kvImageNoError) {
-        NSLog(@"vImageCreateCGImageFromBuffer vImage_Error %@", @(vImError));
-        return nil;
-    }
-    
-    CGColorSpaceRelease(originalColorSpace);
-    free(vImSrcBuffer.data);
-
-    return resizedCGImage;
-}
-
 - (CGImageRef) resizeImage_uikit:(CGImageRef)windowImage size:(CGSize)size {
     CGSize origSize = CGSizeMake(CGImageGetWidth(windowImage), CGImageGetHeight(windowImage));
     
@@ -190,6 +134,5 @@
     CGContextRelease(context);
     return resizedCGImage;
 }
-
 
 @end
